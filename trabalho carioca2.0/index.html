@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Vida Saudável - CRUD</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input { margin-bottom: 10px; padding: 5px; }
+        form button { padding: 8px 15px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .acao-btn { margin-right: 5px; cursor: pointer; padding: 5px 8px; border: none; border-radius: 4px; }
+        .editar-btn { background-color: #ffc107; color: black; }
+        .excluir-btn { background-color: #dc3545; color: white; }
+        .salvar-btn { background-color: #28a745; color: white; }
+    </style>
+</head>
+<body>
+
+    <h1>Hospital Vida Saudável</h1>
+
+    <h2>Fazer Cadastro</h2>
+    <form id="cadastroForm">
+        <label for="nome">NOME:</label><br>
+        <input type="text" id="nome" name="nome" required><br>
+
+        <label for="cpf">CPF:</label><br>
+        <input type="text" id="cpf" name="cpf" required><br>
+
+        <label for="idade">IDADE:</label><br>
+        <input type="number" id="idade" name="idade" required><br>
+
+        <input type="hidden" id="pacienteId" value="">
+
+        <button type="submit" id="concluirBtn">CONCLUIR</button>
+    </form>
+
+    <hr>
+
+    <h2>Pacientes Cadastrados</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Idade</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="pacientesTableBody">
+            </tbody>
+    </table>
+
+    <script>
+        // Array para simular o banco de dados (BD temporário)
+        let pacientes = [
+            { id: 1, nome: "Ana Silva", cpf: "111.222.333-44", idade: 25 },
+            { id: 2, nome: "Bruno Costa", cpf: "555.666.777-88", idade: 40 }
+        ];
+        let proximoId = 3;
+
+        const form = document.getElementById('cadastroForm');
+        const tabelaBody = document.getElementById('pacientesTableBody');
+
+        // --- RENDER (Read) ---
+        function renderizarPacientes() {
+            tabelaBody.innerHTML = '';
+            
+            if (pacientes.length === 0) {
+                tabelaBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">Nenhum paciente cadastrado.</td></tr>`;
+                return;
+            }
+
+            pacientes.forEach(paciente => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${paciente.nome}</td>
+                    <td>${paciente.cpf}</td>
+                    <td>${paciente.idade}</td>
+                    <td>
+                        <button class="acao-btn editar-btn" data-id="${paciente.id}">Editar</button>
+                        <button class="acao-btn excluir-btn" data-id="${paciente.id}">Excluir</button>
+                    </td>
+                `;
+                tabelaBody.appendChild(tr);
+            });
+        }
+
+        // --- CREATE/UPDATE ---
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('pacienteId').value;
+            const nome = document.getElementById('nome').value;
+            const cpf = document.getElementById('cpf').value;
+            const idade = parseInt(document.getElementById('idade').value);
+
+            if (id) {
+                // Lógica de UPDATE
+                const index = pacientes.findIndex(p => p.id === parseInt(id));
+                if (index !== -1) {
+                    pacientes[index] = { id: parseInt(id), nome, cpf, idade };
+                }
+            } else {
+                // Lógica de CREATE
+                const novoPaciente = {
+                    id: proximoId++,
+                    nome,
+                    cpf,
+                    idade
+                };
+                pacientes.push(novoPaciente);
+            }
+
+            form.reset();
+            document.getElementById('pacienteId').value = '';
+            document.getElementById('concluirBtn').innerText = 'CONCLUIR';
+            renderizarPacientes();
+        });
+
+        // --- DELETE, UPDATE (seleção) ---
+        tabelaBody.addEventListener('click', function(event) {
+            const target = event.target;
+            const pacienteId = parseInt(target.getAttribute('data-id'));
+
+            if (target.classList.contains('excluir-btn')) {
+                // Lógica de DELETE
+                excluirPaciente(pacienteId);
+            } else if (target.classList.contains('editar-btn')) {
+                // Lógica para carregar os dados no formulário para edição
+                carregarParaEdicao(pacienteId);
+            }
+        });
+
+        function excluirPaciente(id) {
+            if (confirm("Tem certeza que deseja excluir este paciente?")) {
+                pacientes = pacientes.filter(p => p.id !== id);
+                renderizarPacientes();
+            }
+        }
+
+        function carregarParaEdicao(id) {
+            const paciente = pacientes.find(p => p.id === id);
+            if (paciente) {
+                document.getElementById('pacienteId').value = paciente.id;
+                document.getElementById('nome').value = paciente.nome;
+                document.getElementById('cpf').value = paciente.cpf;
+                document.getElementById('idade').value = paciente.idade;
+                document.getElementById('concluirBtn').innerText = 'SALVAR EDIÇÃO';
+            }
+        }
+
+        // Inicializa a tabela ao carregar a página
+        document.addEventListener('DOMContentLoaded', renderizarPacientes);
+    </script>
+</body>
+</html>
